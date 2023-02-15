@@ -1,9 +1,11 @@
 const { HttpError } = require('../helpers');
 const jwt = require('jsonwebtoken');
-const { User } = require('./../mod/user');
+const { User } = require('../models/user');
 const multer = require('multer');
 const path = require('path');
 const Jimp = require('jimp');
+
+const { JWT_SECRET } = process.env;
 
 function validateBody(schema) {
   return (req, res, next) => {
@@ -21,7 +23,7 @@ async function auth(req, res, next) {
   const [type, token] = authHeader.split(' ');
 
   if (type !== 'Bearer') {
-    throw HttpError(401, 'token type is nod valid, ');
+    throw HttpError(401, 'token type is nod valid.');
   }
 
   if (!token) {
@@ -29,10 +31,11 @@ async function auth(req, res, next) {
   }
 
   try {
-    const { id } = jwt.verify(token, process.env.JWT_SECRET);
+    const { id } = jwt.verify(token, JWT_SECRET);
     const user = await User.findById(id);
-    console.log('user', user);
-
+    if (!user) {
+      throw HttpError(401, 'Not found');
+    }
     req.user = user;
   } catch (error) {
     if (error.name === 'TokenExpiredError' || error.name === 'JsonWebTokenError') {
@@ -53,10 +56,7 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({
-  storage,
-  // limits: {},
-});
+const upload = multer({ storage });
 
 function resize(w, h) {
   return async (req, res, next) => {
