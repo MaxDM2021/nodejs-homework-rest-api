@@ -7,6 +7,9 @@ const Jimp = require('jimp');
 
 const { JWT_SECRET } = process.env;
 
+// ===== validateBody ====
+
+
 function validateBody(schema) {
   return (req, res, next) => {
     const { error } = schema.validate(req.body);
@@ -17,6 +20,8 @@ function validateBody(schema) {
     return next();
   };
 }
+
+// ===== auth ====
 
 async function auth(req, res, next) {
   const authHeader = req.headers.authorization || '';
@@ -47,6 +52,8 @@ async function auth(req, res, next) {
   next();
 }
 
+// ==== Upload ====
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, path.resolve(__dirname, '../tmp'));
@@ -57,6 +64,9 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
+
+
+// ===== resize ====
 
 function resize(w, h) {
   return async (req, res, next) => {
